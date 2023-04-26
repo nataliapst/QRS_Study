@@ -1,15 +1,14 @@
-function[data,t,header] = BITalinoFileReader(file2)
- 
-    %addpath('./jsonlab'= )
+function[data,t,header] = BITalinoFileReader(file)
+    %addpath('./jsonlab')
     %to convert matlab->java or java->matlab
 
     headerlines = 3;
 
-    data= textread(file2,'','headerlines',headerlines);
+    data=textread(file,'','headerlines',headerlines);
 
-    realdata= data(1:length(data));
+    realdata= data(1:length(data),6);
    
-    ecgReal= ((data/(2^16))-0.5)*300; %con esto ajustamos la amplitud
+    ecgReal= ((realdata/(2^16))-0.5)*300; %con esto ajustamos la amplitud
     % 3300/1100 (es decir 3) 
     %multiplicamos por 300 ya que los electrodos obtienen el voltaje en
     %microvoltios y nosotros queremos milivoltios
@@ -26,13 +25,14 @@ function[data,t,header] = BITalinoFileReader(file2)
 
     [p,s,mu] = polyfit((1:numel(ecgReal))',ecgReal,10);
     f_y = polyval(p,(1:numel(ecgReal))',[],mu);
+    %print(f_y)
     ECG_data = (ecgReal - f_y);                                                                  % esto es z score o normal distribution???
     
-    
-    %figure;
-    %subplot(1,1,1);
-    %plot (tiempo,ECG_data);
-    %grid on;
+%     
+%     figure;
+%     subplot(1,1,1);
+%     plot (tiempo,ECG_data);
+%     grid on;
 
    %detectamos picos R -> >0.5mV y se encuentran separadas por mas de 200
    %muestras
@@ -47,35 +47,35 @@ function[data,t,header] = BITalinoFileReader(file2)
     [pksQ,min_locs] = findpeaks(-ECG_data,'MinPeakDistance',40);
     locs_Qwave = min_locs(ECG_data(min_locs)>-0.5 & ECG_data(min_locs)<-0.2);
     
-    %figure
-    %hold on
-    %subplot(2,2,1);
-    %plot(tiempo,ECG_data); 
-    %grid on
-    %title('ECG')
-    %xlabel('Samples')
-    %ylabel('Time (s)')
-
-    %subplot(2,2,2);
-    %plot(locs_Qwave,ECG_data(locs_Qwave),'rs','MarkerFaceColor','g');
-    %grid on
-    %title('Q wave')
-    %xlabel('Samples')
-    %ylabel('Voltage(mV)')
-
-    %subplot(2,2,3);
-    %plot(locs_Rwave,ECG_data(locs_Rwave),'rv','MarkerFaceColor','r');
-    %grid on
-    %title('R wave')
-    %xlabel('Samples')
-    %ylabel('Voltage(mV)')
-
-    %subplot(2,2,4);
-    %plot(locs_Swave,ECG_data(locs_Swave),'rs','MarkerFaceColor','b');
-    %grid on
-    %title('S wave')
-    %xlabel('Samples')
-    %ylabel('Voltage(mV)')
+%     figure
+%     hold on
+%     subplot(2,2,1);
+%     plot(tiempo,ECG_data); 
+%     grid on
+%     title('ECG')
+%     xlabel('Samples')
+%     ylabel('Time (s)')
+% 
+%     subplot(2,2,2);
+%     plot(locs_Qwave,ECG_data(locs_Qwave),'rs','MarkerFaceColor','g');
+%     grid on
+%     title('Q wave')
+%     xlabel('Samples')
+%     ylabel('Voltage(mV)')
+% 
+%     subplot(2,2,3);
+%     plot(locs_Rwave,ECG_data(locs_Rwave),'rv','MarkerFaceColor','r');
+%     grid on
+%     title('R wave')
+%     xlabel('Samples')
+%     ylabel('Voltage(mV)')
+% 
+%     subplot(2,2,4);
+%     plot(locs_Swave,ECG_data(locs_Swave),'rs','MarkerFaceColor','b');
+%     grid on
+%     title('S wave')
+%     xlabel('Samples')
+%     ylabel('Voltage(mV)')
 
     maxPeak= max(pksR);
 
@@ -99,26 +99,27 @@ function[data,t,header] = BITalinoFileReader(file2)
     else
         minPeak = minPeakS;
     end
+    
+   
+    amplitude = maxPeak + minPeak; %porque el mínimo será negativo
 
-    %function amplitudes = BITalinoFileReader(file2);
-    amplitud = maxPeak + minPeak; %porque el mínimo será negativo
-    %amplitudes = amplitud;
-    %fprintf('%f\n', amplitudes);
-    %end;
 
-    %disp('Amplitud total')
-    %fprintf('%f\n', maxPeak)
-    %disp('+')
-    %fprintf('%f\n', minPeak)
-    %disp('=')
-    %fprintf('%f\n', amplitude) -> parece que todo funciona bien
+
+
+
+%     disp('Amplitud total')
+%     fprintf('%f\n', maxPeak)
+%     disp('+')
+%     fprintf('%f\n', minPeak)
+%     disp('=')
+%     fprintf('%f\n', amplitude) %-> parece que todo funciona bien
 
    
   
     %seguimos con la funcion
     header = {};
 
-     fid = fopen(file2, 'r'); % esto significa abrir el archivo para leerlo (read)
+     fid = fopen(file, 'r'); % esto significa abrir el archivo para leerlo (read)
 
      for i=1:headerlines %de 1 a 3
         header(i) = {fgets(fid)};
@@ -129,6 +130,7 @@ function[data,t,header] = BITalinoFileReader(file2)
     
     devices = fieldnames(header);
     srate = header.(devices{1}).samplingrate;
+    
     
     if length(devices) == 1
         header = header.(devices{1});
