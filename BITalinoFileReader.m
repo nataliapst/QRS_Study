@@ -1,4 +1,5 @@
-function[data,t,header] = BITalinoFileReader(file)
+function[data,t,header, maxpksR, heartbeats] = BITalinoFileReader(file)
+
     %addpath('./jsonlab')
     %to convert matlab->java or java->matlab
 
@@ -22,8 +23,7 @@ function[data,t,header] = BITalinoFileReader(file)
     %centramos en cero la señal
     %ecgFinal=(ecgReal-mean(ecgReal))/std(ecgReal);
 
-
-    [p,s,mu] = polyfit((1:numel(ecgReal))',ecgReal,10);
+   [p,s,mu] = polyfit((1:numel(ecgReal))',ecgReal,10);
     f_y = polyval(p,(1:numel(ecgReal))',[],mu);
     %print(f_y)
     ECG_data = (ecgReal - f_y); % esto es z score o normal distribution???
@@ -41,9 +41,8 @@ function[data,t,header] = BITalinoFileReader(file)
 
 
 
-um_y = 6*mean(abs(ECG_data));
-um_x= 0.5*1000;
-
+um_y = 6*mean(abs(ECG_data_update)); %De esta manera escogemos los picos que esten por encima de un umbral
+um_x= 0.5*1000; %CORROBORAR SI ES 1100
 
 [pksR, locs_Rwave, widthR] = findpeaks(ECG_data_update(25000:35000), 'MinPeakWidth',10,'MinPeakDistance',um_x,'MinPeakProminence',0.35);
 %'MinPeakProminence',0.35 pq lo dijo sergio en el paper-> hay q buscar en que se basó, pero parece que ayuda.
@@ -66,15 +65,15 @@ um_x= 0.5*1000;
 [pksAll, locs_Allwaves] = findpeaks(-ECG_data_update(25000:35000));
 %Aqui vamos a guardar todos los máximos que encuentra la señal invertida en el eje x
 
-
-pksQ = [];
-locs_Qwave = [];
-
 [pksR_inv, locs_Rwave_inv] = findpeaks(-ECG_data_update(25000:35000), 'MinPeakWidth',10,'MinPeakDistance',um_x);
 %Damos la vuelta en el eje x a la señal, para que se nos quede la Q y la S
 %como máximos y los segmentos R como minimos. Y en esta función en específico localizamos las
 %posiciones en las que se encuentra la R, en la señal invertida.
 
+
+pksQ = [];
+locs_Qwave = [];
+widthQ=[];
 
 
 for j = 2:numel(pksAll)
@@ -84,16 +83,18 @@ for j = 2:numel(pksAll)
     
             pksQ = [pksQ; (pksAll(j-1))];
             locs_Qwave = [locs_Qwave; (locs_Allwaves(j-1))];
-        
-            %real_locsQ_wave = [real_locsQ_wave; locs_Qwave(a)];
+   
         end
     end
 
 end;
+
+for a = 1:numel(locs_Qwave)
+    widthQ = [widthQ; (locs_Rwave_inv(a)-locs_Qwave(a))];
+end
+
 %Aqui lo que hacemos es escoger el máximo que haya anterior al segmento R,
 %de manera que realmente estamos guardando los picos Q.
-
-
 
 
 % Este era mi intento de conseguir el segmento Q, amos a decir, de manera
@@ -153,23 +154,29 @@ end;
 
 
 %amplitud = Onda R - Onda Q - Onda S
-disp(max(pksR));
-disp(max(pksQ));
-disp(max(pksS));
+%disp(max(pksR));
+%disp(max(pksQ));
+%disp(max(pksS));
 
-amplitud = max(pksR) - max(pksQ) - max(pksS);
+maxpksR = max(pksR);
+
+amplitud = max(pksR)- max(pksS);
 
 %heartbeats = latidos / min = duracion complejo QRS/ min
+%heartbeats = latidos / min = duracion complejo QRS/ min
 
-heartbeats= (numel(pksR)-1)*(6) ;%como estamos muestreando 10seg la señal,
+heartbeats = (numel(pksR)*6) ;%como estamos muestreando 10seg la señal,
 % %si multiplicamos el numerador y el denominador por 6 tenemos los latidos
 % por minuto.
 %Un latido es un intervalo RR por eso (numel(pksR)-1), asi contamos intervalos y no número de picos R encontrados
+%60-100bpm
 
 
 
-                  
+
 %TRYING TO DETECT THE Q WAVE
+
+
      %minPeak=-max(pksMin)% para que me coja el valor más negativo
      %maxPeak= max(pksR);
 %picos maximos y minimos para calcular la media
@@ -276,6 +283,5 @@ heartbeats= (numel(pksR)-1)*(6) ;%como estamos muestreando 10seg la señal,
         t = (1:length(data))/srate;
     end
 
-   
-
+    return;
 end
