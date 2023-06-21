@@ -46,10 +46,8 @@ ar=ls(path); %para listar los contenidos
           %disp(j)
           %fprintf(stringArchivo(j));
           %fprintf(strcat(stringArchivo(j), '.txt'))
-          [~,~,~,maxpksR,heartbeats, amplitud]= BITalinoFileReader(strcat(stringArchivo(j), '.txt'));
-          %disp(maxpksR);
+          [~,~,~,heartbeats, amplitud]= BITalinoFileReader(strcat(stringArchivo(j), '.txt'));
 
-         maxpksR_array(j,1)= maxpksR;
          heartbeats_array(j,1)=heartbeats;
          amplitud_array(j,1)= amplitud;
          
@@ -61,18 +59,18 @@ ar=ls(path); %para listar los contenidos
     % 
      fprintf("\nAmplitude-Heartbeats correlation")
      [R1,P1] = corrcoef(amplitud_array,heartbeats_array);
-    % %R1 =0.3043 -> correlacion
-    % %P1 =0.2565
+    % %R1 =0.1824 -> correlacion
+    % %P1 =0.1251 
 
 %     [~, p, ~, ~] = ttest2(amplitud_array,heartbeats_array);
-%     p = 7.9707e-86
+%     p = 7.2393e-88
 %     
 %     figure
 %     p = polyfit(amplitud_array,heartbeats_array,1)
-%     p =  4.8235   74.3492
+%     p =  8.6613   73.0617
 %     x_regression = linspace(min(amplitud_array), max(amplitud_array), 100);
 %     y_regression = polyval(p, x_regression);
-%     plot(maxpksR_array, heartbeats_array, 'o', x_regression, y_regression);
+%     plot(amplitud_array, heartbeats_array, 'o', x_regression, y_regression);
 %     xlabel('Amplitude');
 %     ylabel('Heartbeats');
 %     title('Lineal regression');
@@ -146,11 +144,11 @@ pesoAll(posiciones_eliminar) = [];
 
 fprintf("\nAmplitude-Weigth correlation")
 [R2,P2] = corrcoef(amplitud_array,pesoAll);
-%R2=0.0593
-%P2=0.6210
+%R2=0.2006
+%P2=0.0911
 
 %[~, p, ~, ~] = ttest2(amplitud_array,pesoAll)
-%p =8.9795e-82
+%p =8.3957e-82
 
 
 % figure
@@ -158,7 +156,7 @@ fprintf("\nAmplitude-Weigth correlation")
 % 
 % p =
 % 
-%     2.2674   68.4073
+%      9.5880   65.5268
 % 
 % x_regression = linspace(min(amplitud_array), max(amplitud_array), 100);
 % y_regression = polyval(p, x_regression);
@@ -189,15 +187,15 @@ pesoMen = peso(meninFolder);
 fprintf("\nAmplitude-IMC Women correlation")
 [R3,P3] = corrcoef(amplitudWomen,pesoWomen);
 
-%R3= -0.0721
-%P3= 0.6759
-%[~, p, ~, ~] = ttest2(amplitudWomen,pesoWomen) -> p= 4.0268e-40
+%R3= -0.1455
+%P3= 0.3972
+%[~, p, ~, ~] = ttest2(amplitudWomen,pesoWomen) -> p= 3.9517e-40
 %figure
 % p = polyfit(amplitudWomen,pesoWomen,1) 
 % 
 % p =
 % 
-%      -2.7105   66.8703
+%      -6.4066   68.2022
 % 
 % x_regression = linspace(min(amplitudWomen), max(amplitudWomen), 100);
 % y_regression = polyval(p, x_regression);
@@ -214,16 +212,16 @@ fprintf("\nAmplitude-IMC Women correlation")
 
 fprintf("\nAmplitude-IMC Men correlation")
 [R4,P4] = corrcoef(amplitudMen,pesoMen);
-%R4=0.1101
-%P4=0.5225
-%[~, p, ~, ~] = ttest2(amplitudMen, pesoMen) -> p= 1.7465e-44
+%R4=0.0416
+%P4=0.8097
+%[~, p, ~, ~] = ttest2(amplitudMen, pesoMen) -> p= 1.6564e-44
 
 %figure
 % p = polyfit(amplitudMen, pesoMen,1)
 % 
 % p =
 % 
-%      3.7050   65.7692
+%       1.8773   66.7133
 % 
 % x_regression = linspace(min(amplitudMen), max(amplitudMen), 100);
 % y_regression = polyval(p, x_regression);
@@ -239,4 +237,3 @@ fprintf("\nAmplitude-IMC Men correlation")
    end
  end
 
-    
